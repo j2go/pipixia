@@ -5,10 +5,10 @@ import org.springframework.stereotype.Repository
 import javax.persistence.*
 
 /**
- * Created by shitiangao on 2017/8/22.
+ * Created by ttgg on 2017/8/22.
  */
 @Entity
-class Dish {
+class Tag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = -1
@@ -17,8 +17,7 @@ class Dish {
     var version: Long = 0
 
     var name: String = ""
-    var type: Int = 0
 }
 
 @Repository
-interface DishRepository : CrudRepository<Dish, Long>
+interface TagRepository : CrudRepository<Tag, Long>

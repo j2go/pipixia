@@ -18,7 +18,7 @@ class IndexController(@Autowired val spider: SpiderService) {
 
     @GetMapping("/one")
     fun one(): String {
-        return spider.getOne()
+        return spider.catchOneDistrict(104)
     }
 
 }

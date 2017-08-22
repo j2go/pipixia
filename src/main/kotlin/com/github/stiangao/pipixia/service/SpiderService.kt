@@ -1,16 +1,26 @@
 package com.github.stiangao.pipixia.service
 
+import com.github.stiangao.pipixia.domain.*
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import okhttp3.*
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 /**
  * Created by shitiangao on 2017/8/11.
  */
 @Service
-class SpiderService {
+class SpiderService(
+        @Autowired val dishRepo: DishRepository,
+        @Autowired val districtRepo: DistrictRepository,
+        @Autowired val restaurantRepo: RestaurantRepository,
+        @Autowired val tagRepo: TagRepository
+) {
 
-    fun getInfo(body: String): String {
+    val gson = Gson()
+
+    fun getResult(body: String): String {
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val client = OkHttpClient()
 
@@ -46,12 +56,80 @@ class SpiderService {
     fun getOne(): String {
         val extension = SOARequestExtension("protocal", "https")
         val head = SOARequestHead("09031075311291104867", "", "1.0", "01", "8888", "09", null, listOf(extension))
-        val body = SOARequestBody(104, 0, 0.0, 0.0, 0, 1, 20, 0,
+        val body = SOARequestBody(104, 0, 0.0, 0.0, 0, 1, 100, 0,
                 listOf(), listOf(), listOf(), listOf(), "", 0, 0, 0, 0, 2, 0,
                 false, true, "json", head)
         val bodyJson = Gson().toJson(body)
 
-        return SpiderService().getInfo(bodyJson)
+        return getResult(bodyJson)
+    }
+
+    fun catchOneDistrict(destId: Long): String {
+        val extension = SOARequestExtension("protocal", "https")
+        val head = SOARequestHead("09031075311291104867", "", "1.0", "01", "8888", "09", null, listOf(extension))
+        val body = SOARequestBody(destId, 0, 0.0, 0.0, 0, 1, 200, 0,
+                listOf(), listOf(), listOf(), listOf(), "", 0, 0, 0, 0, 2, 0,
+                false, true, "json", head)
+        val bodyJson = gson.toJson(body)
+
+        var jsonObj: JsonObject = gson.fromJson(getResult(bodyJson), JsonObject::class.java)
+
+        var jsonDistrict = jsonObj.getAsJsonObject("District")
+
+        saveDistrict(jsonDistrict)
+        saveRestaurant(jsonDistrict)
+        return jsonObj.getAsJsonObject("ResponseStatus").toString()
+    }
+
+    private fun saveRestaurant(jsonDistrict: JsonObject) {
+        var restaurants = jsonDistrict.getAsJsonArray("Restaurants")
+        restaurants.forEach({
+            var obj = it.asJsonObject
+
+            var entity = Restaurant()
+
+            val restaurantId = obj.getAsJsonPrimitive("RestaurantId").asLong
+            entity.id = restaurantId
+            entity.poiId = obj.getAsJsonPrimitive("PoiId").asLong
+            entity.name = obj.getAsJsonPrimitive("Name").asString
+            entity.ggCoordLat = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lat").asDouble
+            entity.ggCoordLng = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lng").asDouble
+            entity.bCoordLat = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lat").asDouble
+            entity.bCoordLng = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lng").asDouble
+            entity.imageUrl = obj.getAsJsonPrimitive("ImageUrl").asString
+            entity.imageUrl2 = obj.getAsJsonPrimitive("ImageUrl2").asString
+            entity.averagePrice = obj.getAsJsonPrimitive("AveragePrice").asInt
+            entity.currencyUnit = obj.getAsJsonPrimitive("CurrencyUnit").asString
+            entity.commentScore = obj.getAsJsonPrimitive("CommentScore").asDouble
+            entity.commentCount = obj.getAsJsonPrimitive("CommentCount").asInt
+            entity.distanceNum = obj.getAsJsonPrimitive("DistanceNum").asInt
+            entity.canBook = obj.getAsJsonPrimitive("IsBook").asBoolean
+            entity.haveProduct = obj.getAsJsonPrimitive("IsHaveProduct").asBoolean
+            entity.isPromotion = obj.getAsJsonPrimitive("IsPromotion").asBoolean
+            entity.recommandType = obj.getAsJsonPrimitive("RecommandType").asInt
+            entity.feature = obj.getAsJsonPrimitive("Feature").asString
+            entity.shiMeiLinType = obj.getAsJsonPrimitive("ShiMeiLinType").asInt
+            entity.haveHotelProduct = obj.getAsJsonPrimitive("IsHaveHotelProduct").asBoolean
+            entity.landmarkName = obj.getAsJsonPrimitive("LandmarkName").asString
+            entity.landmarkDistance = obj.getAsJsonPrimitive("LandmarkDistance").asString
+
+
+        })
+
+    }
+
+    private fun saveDistrict(jsonDistrict: JsonObject) {
+        var districtEntity = District()
+        val districtId = jsonDistrict.getAsJsonPrimitive("DistrictId").asLong
+        districtEntity.id = districtId
+        districtEntity.name = jsonDistrict.getAsJsonPrimitive("DistrictName").asString
+        districtEntity.enName = jsonDistrict.getAsJsonPrimitive("EName").asString
+        districtEntity.inChina = jsonDistrict.getAsJsonPrimitive("InChina").asBoolean
+        districtEntity.isOversea = jsonDistrict.getAsJsonPrimitive("IsOversea").asBoolean
+
+        if (!districtRepo.findById(districtId).isPresent) {
+            districtRepo.save(districtEntity)
+        }
     }
 
 }
@@ -68,7 +146,7 @@ data class SOARequestHead(val cid: String,
                           val auth: String?,
                           val extension: List<SOARequestExtension>)
 
-data class SOARequestBody(val ViewDestId: Int,
+data class SOARequestBody(val ViewDestId: Long,
                           val BrowseVersion: Int,
                           val Lon: Double,
                           val Lat: Double,
