@@ -6,16 +6,27 @@ import javax.persistence.Entity
 import javax.persistence.GeneratedValue
 import javax.persistence.GenerationType
 import javax.persistence.Id
+import javax.persistence.Version
 
 /**
- * Created by shitiangao on 2017/8/11.
+ * Created by shitiangao on 2017/8/22.
  */
 @Entity
-class Restaurant {
+class District {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = -1
+
+    @Version
+    var version: Long = 0
+
+    var name: String = ""
+    var enName: String = ""
+    var inChina: Boolean = true
+    var isOversea: Boolean = false
+
 }
 
 @Repository
-interface RestaurantRepository : CrudRepository<Restaurant, Long>
+interface DistrictRepository : CrudRepository<District, Long>

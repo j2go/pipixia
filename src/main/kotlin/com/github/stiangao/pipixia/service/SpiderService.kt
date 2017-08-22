@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 @Service
 class SpiderService {
 
-    fun getInfo(body: String): String? {
+    fun getInfo(body: String): String {
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val client = OkHttpClient()
 
@@ -39,8 +39,21 @@ class SpiderService {
         val response = client.newCall(request).execute()
         println(response.headers().toString())
         println(response.code())
-        return response.body()?.string()
+
+        return response.body()?.string() ?: ""
     }
+
+    fun getOne(): String {
+        val extension = SOARequestExtension("protocal", "https")
+        val head = SOARequestHead("09031075311291104867", "", "1.0", "01", "8888", "09", null, listOf(extension))
+        val body = SOARequestBody(104, 0, 0.0, 0.0, 0, 1, 20, 0,
+                listOf(), listOf(), listOf(), listOf(), "", 0, 0, 0, 0, 2, 0,
+                false, true, "json", head)
+        val bodyJson = Gson().toJson(body)
+
+        return SpiderService().getInfo(bodyJson)
+    }
+
 }
 
 data class SOARequestExtension(val name: String,
@@ -78,14 +91,3 @@ data class SOARequestBody(val ViewDestId: Int,
                           val IsMeiShiLin: Boolean,
                           val contentType: String,
                           val head: SOARequestHead)
-
-fun getOne() {
-    val extension = SOARequestExtension("protocal", "https")
-    val head = SOARequestHead("09031075311291104867", "", "1.0", "01", "8888", "09", null, listOf(extension))
-    val body = SOARequestBody(104, 0, 0.0, 0.0, 0, 1, 20, 0,
-            listOf(), listOf(), listOf(), listOf(), "", 0, 0, 0, 0, 2, 0,
-            false, true, "json", head)
-    val bodyJson = Gson().toJson(body)
-
-    println(SpiderService().getInfo(bodyJson))
-}
