@@ -2,8 +2,11 @@ package com.github.stiangao.pipixia.service
 
 import com.github.stiangao.pipixia.domain.*
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import okhttp3.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -18,6 +21,7 @@ class SpiderService(
         @Autowired val tagRepo: TagRepository
 ) {
 
+    val LOGGER: Logger = LoggerFactory.getLogger(SpiderService::class.java)
     val gson = Gson()
 
     fun getResult(body: String): String {
@@ -74,62 +78,72 @@ class SpiderService(
 
         var jsonObj: JsonObject = gson.fromJson(getResult(bodyJson), JsonObject::class.java)
 
-        var jsonDistrict = jsonObj.getAsJsonObject("District")
-
-        saveDistrict(jsonDistrict)
-        saveRestaurant(jsonDistrict)
+        val district = saveDistrict(jsonObj.getAsJsonObject("District"))
+        saveRestaurants(jsonObj.getAsJsonArray("Restaurants"), district)
         return jsonObj.getAsJsonObject("ResponseStatus").toString()
     }
 
-    private fun saveRestaurant(jsonDistrict: JsonObject) {
-        var restaurants = jsonDistrict.getAsJsonArray("Restaurants")
+    private fun saveRestaurants(restaurants: JsonArray, district: District) {
         restaurants.forEach({
             var obj = it.asJsonObject
 
             var entity = Restaurant()
 
             val restaurantId = obj.getAsJsonPrimitive("RestaurantId").asLong
-            entity.id = restaurantId
-            entity.poiId = obj.getAsJsonPrimitive("PoiId").asLong
-            entity.name = obj.getAsJsonPrimitive("Name").asString
-            entity.ggCoordLat = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lat").asDouble
-            entity.ggCoordLng = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lng").asDouble
-            entity.bCoordLat = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lat").asDouble
-            entity.bCoordLng = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lng").asDouble
-            entity.imageUrl = obj.getAsJsonPrimitive("ImageUrl").asString
-            entity.imageUrl2 = obj.getAsJsonPrimitive("ImageUrl2").asString
-            entity.averagePrice = obj.getAsJsonPrimitive("AveragePrice").asInt
-            entity.currencyUnit = obj.getAsJsonPrimitive("CurrencyUnit").asString
-            entity.commentScore = obj.getAsJsonPrimitive("CommentScore").asDouble
-            entity.commentCount = obj.getAsJsonPrimitive("CommentCount").asInt
-            entity.distanceNum = obj.getAsJsonPrimitive("DistanceNum").asInt
-            entity.canBook = obj.getAsJsonPrimitive("IsBook").asBoolean
-            entity.haveProduct = obj.getAsJsonPrimitive("IsHaveProduct").asBoolean
-            entity.isPromotion = obj.getAsJsonPrimitive("IsPromotion").asBoolean
-            entity.recommandType = obj.getAsJsonPrimitive("RecommandType").asInt
-            entity.feature = obj.getAsJsonPrimitive("Feature").asString
-            entity.shiMeiLinType = obj.getAsJsonPrimitive("ShiMeiLinType").asInt
-            entity.haveHotelProduct = obj.getAsJsonPrimitive("IsHaveHotelProduct").asBoolean
-            entity.landmarkName = obj.getAsJsonPrimitive("LandmarkName").asString
-            entity.landmarkDistance = obj.getAsJsonPrimitive("LandmarkDistance").asString
 
+            if (restaurantRepo.findById(restaurantId).isPresent) {
+                LOGGER.info("----- skip $restaurantId")
+            } else {
+                entity.id = restaurantId
+                entity.district = district
+                entity.poiId = obj.getAsJsonPrimitive("PoiId").asLong
+                entity.name = obj.getAsJsonPrimitive("Name").asString
+                entity.ggCoordLat = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lat").asDouble
+                entity.ggCoordLng = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lng").asDouble
+                entity.bCoordLat = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lat").asDouble
+                entity.bCoordLng = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lng").asDouble
+                entity.imageUrl = obj.getAsJsonPrimitive("ImageUrl").asString
+                entity.imageUrl2 = obj.getAsJsonPrimitive("ImageUrl2").asString
+                entity.averagePrice = obj.getAsJsonPrimitive("AveragePrice").asInt
+                entity.currencyUnit = obj.getAsJsonPrimitive("CurrencyUnit").asString
+                entity.commentScore = obj.getAsJsonPrimitive("CommentScore").asDouble
+                entity.commentCount = obj.getAsJsonPrimitive("CommentCount").asInt
+                entity.distanceNum = obj.getAsJsonPrimitive("DistanceNum").asInt
+                entity.canBook = obj.getAsJsonPrimitive("IsBook").asBoolean
+                entity.haveProduct = obj.getAsJsonPrimitive("IsHaveProduct").asBoolean
+                entity.isPromotion = obj.getAsJsonPrimitive("IsPromotion").asBoolean
+                entity.recommandType = obj.getAsJsonPrimitive("RecommandType").asInt
+                entity.feature = obj.getAsJsonPrimitive("Feature").asString
+                entity.shiMeiLinType = obj.getAsJsonPrimitive("ShiMeiLinType").asInt
+                entity.haveHotelProduct = obj.getAsJsonPrimitive("IsHaveHotelProduct").asBoolean
+                entity.landmarkName = obj.getAsJsonPrimitive("LandmarkName")?.asString ?: ""
+                entity.landmarkDistance = obj.getAsJsonPrimitive("LandmarkDistance")?.asString ?: ""
 
+                LOGGER.info("----- save $restaurantId")
+                restaurantRepo.save(entity)
+            }
         })
-
     }
 
-    private fun saveDistrict(jsonDistrict: JsonObject) {
-        var districtEntity = District()
+    private fun saveDistrict(jsonDistrict: JsonObject): District {
+
         val districtId = jsonDistrict.getAsJsonPrimitive("DistrictId").asLong
+
+        val district = districtRepo.findById(districtId)
+        if (district.isPresent) {
+            return district.get()
+        }
+        var districtEntity = District()
+
         districtEntity.id = districtId
         districtEntity.name = jsonDistrict.getAsJsonPrimitive("DistrictName").asString
         districtEntity.enName = jsonDistrict.getAsJsonPrimitive("EName").asString
         districtEntity.inChina = jsonDistrict.getAsJsonPrimitive("InChina").asBoolean
         districtEntity.isOversea = jsonDistrict.getAsJsonPrimitive("IsOversea").asBoolean
 
-        if (!districtRepo.findById(districtId).isPresent) {
-            districtRepo.save(districtEntity)
-        }
+        districtRepo.save(districtEntity)
+
+        return districtEntity
     }
 
 }

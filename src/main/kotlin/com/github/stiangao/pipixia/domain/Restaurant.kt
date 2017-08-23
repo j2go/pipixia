@@ -10,7 +10,6 @@ import javax.persistence.*
 @Entity
 class Restaurant {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = -1
 
     var poiId: Long = -1

@@ -10,7 +10,6 @@ import javax.persistence.*
 @Entity
 class Dish {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = -1
 
     @Version

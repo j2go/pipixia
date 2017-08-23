@@ -15,7 +15,6 @@ import javax.persistence.Version
 class District {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = -1
 
     @Version

@@ -10,7 +10,6 @@ import javax.persistence.*
 @Entity
 class Tag {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = -1
 
     @Version
