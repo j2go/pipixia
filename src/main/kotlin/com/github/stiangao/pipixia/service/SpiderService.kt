@@ -78,12 +78,35 @@ class SpiderService(
 
         var jsonObj: JsonObject = gson.fromJson(getResult(bodyJson), JsonObject::class.java)
 
+        var totalNum = jsonObj.getAsJsonPrimitive("TotalCount").asInt
+
         val district = saveDistrict(jsonObj.getAsJsonObject("District"))
         saveRestaurants(jsonObj.getAsJsonArray("Restaurants"), district)
+
+        var pageIndex = 2
+
+        while (pageIndex < totalNum/200) {
+            jsonObj = getPage(destId, pageIndex)
+            saveRestaurants(jsonObj.getAsJsonArray("Restaurants"), district)
+            println("~~~~~ " + System.currentTimeMillis())
+            pageIndex++
+        }
         return jsonObj.getAsJsonObject("ResponseStatus").toString()
     }
 
+    private fun getPage(destId: Long, pageIndex: Int): JsonObject {
+        val extension = SOARequestExtension("protocal", "https")
+        val head = SOARequestHead("09031075311291104867", "", "1.0", "01", "8888", "09", null, listOf(extension))
+        val body = SOARequestBody(destId, 0, 0.0, 0.0, 0, pageIndex, 200, 0,
+                listOf(), listOf(), listOf(), listOf(), "", 0, 0, 0, 0, 2, 0,
+                false, true, "json", head)
+        val bodyJson = gson.toJson(body)
+
+        return gson.fromJson(getResult(bodyJson), JsonObject::class.java)
+    }
+
     private fun saveRestaurants(restaurants: JsonArray, district: District) {
+        var entities: MutableList<Restaurant> = mutableListOf()
         restaurants.forEach({
             var obj = it.asJsonObject
 
@@ -113,16 +136,19 @@ class SpiderService(
                 entity.haveProduct = obj.getAsJsonPrimitive("IsHaveProduct").asBoolean
                 entity.isPromotion = obj.getAsJsonPrimitive("IsPromotion").asBoolean
                 entity.recommandType = obj.getAsJsonPrimitive("RecommandType").asInt
-                entity.feature = obj.getAsJsonPrimitive("Feature").asString
+                entity.feature = obj.getAsJsonPrimitive("Feature")?.asString ?: ""
                 entity.shiMeiLinType = obj.getAsJsonPrimitive("ShiMeiLinType").asInt
                 entity.haveHotelProduct = obj.getAsJsonPrimitive("IsHaveHotelProduct").asBoolean
                 entity.landmarkName = obj.getAsJsonPrimitive("LandmarkName")?.asString ?: ""
                 entity.landmarkDistance = obj.getAsJsonPrimitive("LandmarkDistance")?.asString ?: ""
 
-                LOGGER.info("----- save $restaurantId")
-                restaurantRepo.save(entity)
+                LOGGER.info("----- add $restaurantId")
+                entities.add(entity)
+
             }
         })
+        LOGGER.info("---------- save $entities")
+        restaurantRepo.saveAll(entities)
     }
 
     private fun saveDistrict(jsonDistrict: JsonObject): District {
