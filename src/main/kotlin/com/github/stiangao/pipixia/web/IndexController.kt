@@ -3,6 +3,7 @@ package com.github.stiangao.pipixia.web
 import com.github.stiangao.pipixia.service.SpiderService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -16,9 +17,9 @@ class IndexController(@Autowired val spider: SpiderService) {
         return "0.1.0"
     }
 
-    @GetMapping("/one")
-    fun one(): String {
-        return spider.catchOneDistrict(104)
+    @GetMapping("/dest")
+    fun one(@RequestParam id: Long, @RequestParam page: Int): String {
+        return spider.getPage(id, page).toString()
     }
 
 }

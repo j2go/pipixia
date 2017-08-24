@@ -41,7 +41,7 @@ class Restaurant {
     var canBook: Boolean = false
     var haveProduct: Boolean = false
     var isPromotion: Boolean = false
-    var recommandType: Int = 1
+    var recommendType: Int = 1
 
     var feature: String = ""
     var shiMeiLinType: Int = 0
