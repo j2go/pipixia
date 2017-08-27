@@ -22,5 +22,12 @@ class IndexController(@Autowired val spider: SpiderService) {
         return spider.getPage(id, page).toString()
     }
 
+    @GetMapping("/dest/catch")
+    fun catchOne(@RequestParam id: Long): String {
+        Thread({ spider.catchOneDistrict(id) }).start()
+
+        return "accept"
+    }
+
 }
 

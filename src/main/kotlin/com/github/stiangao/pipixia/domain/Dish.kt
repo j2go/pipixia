@@ -13,7 +13,7 @@ class Dish {
     var id: Long = -1
 
     @Version
-    var version: Long = 0
+    var version = 0
 
     var name: String = ""
     var type: Int = 0

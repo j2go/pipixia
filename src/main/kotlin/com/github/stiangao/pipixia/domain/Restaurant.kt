@@ -12,6 +12,8 @@ class Restaurant {
     @Id
     var id: Long = -1
 
+    @Version
+    var version = 0
     var poiId: Long = -1
     var name: String = ""
 
@@ -35,8 +37,8 @@ class Restaurant {
 
     var distanceNum: Int = 0
 
-    @OneToMany(cascade = arrayOf(CascadeType.ALL), fetch = FetchType.LAZY)
-    var tags: List<Tag> = listOf()
+    @ManyToMany(cascade = arrayOf(CascadeType.ALL), fetch = FetchType.LAZY)
+    var tags: MutableList<Tag> = mutableListOf()
 
     var canBook: Boolean = false
     var haveProduct: Boolean = false

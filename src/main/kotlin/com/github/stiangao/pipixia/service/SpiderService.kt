@@ -62,7 +62,7 @@ class SpiderService(
         return getResult(bodyJson)
     }
 
-    fun catchOneDistrict(destId: Long): String {
+    fun catchOneDistrict(destId: Long) {
         val extension = SOARequestExtension("protocal", "https")
         val head = SOARequestHead("09031075311291104867", "", "1.0", "01", "8888", "09", null, listOf(extension))
         val body = SOARequestBody(destId, 0, 0.0, 0.0, 0, 1, 200, 0,
@@ -75,17 +75,21 @@ class SpiderService(
         var totalNum = jsonObj.getAsJsonPrimitive("TotalCount").asInt
 
         val district = saveDistrict(jsonObj.getAsJsonObject("District"))
-        saveRestaurants(jsonObj.getAsJsonArray("Restaurants"), district)
+        var lastId = saveRestaurantsAndGetLastId(jsonObj.getAsJsonArray("Restaurants"), district)
 
         var pageIndex = 2
 
-        while (pageIndex < totalNum/200) {
+        while (pageIndex < totalNum / 200) {
             jsonObj = getPage(destId, pageIndex)
-            saveRestaurants(jsonObj.getAsJsonArray("Restaurants"), district)
+            val theLastId = saveRestaurantsAndGetLastId(jsonObj.getAsJsonArray("Restaurants"), district)
+            if (lastId == theLastId) {
+                print("提前结束。 pre over")
+                return
+            }
             println("~~~~~ $pageIndex -- " + System.currentTimeMillis())
             pageIndex++
         }
-        return jsonObj.getAsJsonObject("ResponseStatus").toString()
+
     }
 
     fun getPage(destId: Long, pageIndex: Int): JsonObject {
@@ -99,52 +103,70 @@ class SpiderService(
         return gson.fromJson(getResult(bodyJson), JsonObject::class.java)
     }
 
-    private fun saveRestaurants(restaurants: JsonArray, district: District) {
+    private fun saveRestaurantsAndGetLastId(restaurants: JsonArray, district: District): Long {
         var entities: MutableList<Restaurant> = mutableListOf()
+        var lastId: Long = 0
         restaurants.forEach({
-            var obj = it.asJsonObject
+            var jsonObj = it.asJsonObject
 
-            var entity = Restaurant()
+            var restaurantEntity = Restaurant()
 
-            val restaurantId = obj.getAsJsonPrimitive("RestaurantId").asLong
+            val restaurantId = jsonObj.getAsJsonPrimitive("RestaurantId").asLong
+
+            lastId = restaurantId
 
             if (restaurantRepo.findById(restaurantId).isPresent) {
                 LOGGER.info("----- skip $restaurantId")
-            } else {
-                entity.id = restaurantId
-                entity.district = district
-                entity.poiId = obj.getAsJsonPrimitive("PoiId").asLong
-                entity.name = obj.getAsJsonPrimitive("Name").asString
-                entity.ggCoordLat = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lat").asDouble
-                entity.ggCoordLng = obj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lng").asDouble
-                entity.bCoordLat = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lat").asDouble
-                entity.bCoordLng = obj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lng").asDouble
-                entity.imageUrl = obj.getAsJsonPrimitive("ImageUrl").asString
-                entity.imageUrl2 = obj.getAsJsonPrimitive("ImageUrl2").asString
-                entity.averagePrice = obj.getAsJsonPrimitive("AveragePrice").asInt
-                entity.currencyUnit = obj.getAsJsonPrimitive("CurrencyUnit").asString
-                entity.commentScore = obj.getAsJsonPrimitive("CommentScore").asDouble
-                entity.commentCount = obj.getAsJsonPrimitive("CommentCount").asInt
-                entity.distanceNum = obj.getAsJsonPrimitive("DistanceNum").asInt
-                entity.canBook = obj.getAsJsonPrimitive("IsBook").asBoolean
-                entity.haveProduct = obj.getAsJsonPrimitive("IsHaveProduct").asBoolean
-                entity.isPromotion = obj.getAsJsonPrimitive("IsPromotion").asBoolean
-                entity.recommendType = obj.getAsJsonPrimitive("RecommandType").asInt
-                entity.feature = obj.getAsJsonPrimitive("Feature")?.asString ?: ""
-                entity.shiMeiLinType = obj.getAsJsonPrimitive("ShiMeiLinType").asInt
-                entity.haveHotelProduct = obj.getAsJsonPrimitive("IsHaveHotelProduct").asBoolean
-                entity.landmarkName = obj.getAsJsonPrimitive("LandmarkName")?.asString ?: ""
-                entity.landmarkDistance = obj.getAsJsonPrimitive("LandmarkDistance")?.asString ?: ""
-                entity.shiMeiLinChainTypeName = obj.getAsJsonPrimitive("MeiShiLinChainTypeName")?.asString ?: ""
-                entity.shiMeiLinName = obj.getAsJsonPrimitive("ShiMeiLinName")?.asString ?: ""
 
+            } else {
+                restaurantEntity.id = restaurantId
+                restaurantEntity.district = district
+                restaurantEntity.poiId = jsonObj.getAsJsonPrimitive("PoiId").asLong
+                restaurantEntity.name = jsonObj.getAsJsonPrimitive("Name").asString
+                restaurantEntity.ggCoordLat = jsonObj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lat").asDouble
+                restaurantEntity.ggCoordLng = jsonObj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lng").asDouble
+                restaurantEntity.bCoordLat = jsonObj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lat").asDouble
+                restaurantEntity.bCoordLng = jsonObj.getAsJsonObject("BCoord").getAsJsonPrimitive("Lng").asDouble
+                restaurantEntity.imageUrl = jsonObj.getAsJsonPrimitive("ImageUrl").asString
+                restaurantEntity.imageUrl2 = jsonObj.getAsJsonPrimitive("ImageUrl2").asString
+                restaurantEntity.averagePrice = jsonObj.getAsJsonPrimitive("AveragePrice").asInt
+                restaurantEntity.currencyUnit = jsonObj.getAsJsonPrimitive("CurrencyUnit").asString
+                restaurantEntity.commentScore = jsonObj.getAsJsonPrimitive("CommentScore").asDouble
+                restaurantEntity.commentCount = jsonObj.getAsJsonPrimitive("CommentCount").asInt
+                restaurantEntity.distanceNum = jsonObj.getAsJsonPrimitive("DistanceNum").asInt
+                restaurantEntity.canBook = jsonObj.getAsJsonPrimitive("IsBook").asBoolean
+                restaurantEntity.haveProduct = jsonObj.getAsJsonPrimitive("IsHaveProduct").asBoolean
+                restaurantEntity.isPromotion = jsonObj.getAsJsonPrimitive("IsPromotion").asBoolean
+                restaurantEntity.recommendType = jsonObj.getAsJsonPrimitive("RecommandType").asInt
+                restaurantEntity.feature = jsonObj.getAsJsonPrimitive("Feature")?.asString ?: ""
+                restaurantEntity.shiMeiLinType = jsonObj.getAsJsonPrimitive("ShiMeiLinType").asInt
+                restaurantEntity.haveHotelProduct = jsonObj.getAsJsonPrimitive("IsHaveHotelProduct").asBoolean
+                restaurantEntity.landmarkName = jsonObj.getAsJsonPrimitive("LandmarkName")?.asString ?: ""
+                restaurantEntity.landmarkDistance = jsonObj.getAsJsonPrimitive("LandmarkDistance")?.asString ?: ""
+                restaurantEntity.shiMeiLinChainTypeName = jsonObj.getAsJsonPrimitive("MeiShiLinChainTypeName")?.asString ?: ""
+                restaurantEntity.shiMeiLinName = jsonObj.getAsJsonPrimitive("ShiMeiLinName")?.asString ?: ""
+
+
+                var tags = jsonObj.getAsJsonArray("TagNameList")
+                tags.forEach({
+                    var tag = tagRepo.findByName(it.asString)
+                    if (tag.isPresent) {
+                        restaurantEntity.tags.add(tag.get())
+                    } else {
+                        var tagEntity = Tag()
+                        tagEntity.name = it.asString
+                        tagEntity = tagRepo.save(tagEntity)
+                        restaurantEntity.tags.add(tagEntity)
+                    }
+                })
                 LOGGER.info("----- add $restaurantId")
-                entities.add(entity)
+                entities.add(restaurantEntity)
 
             }
         })
         LOGGER.info("---------- save entities")
         restaurantRepo.saveAll(entities)
+        return lastId
     }
 
     private fun saveDistrict(jsonDistrict: JsonObject): District {
