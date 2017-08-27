@@ -86,6 +86,7 @@ class SpiderService(
                 print("提前结束。 pre over")
                 return
             }
+            lastId = theLastId
             println("~~~~~ $pageIndex -- " + System.currentTimeMillis())
             pageIndex++
         }
@@ -164,7 +165,7 @@ class SpiderService(
 
             }
         })
-        LOGGER.info("---------- save entities")
+        LOGGER.info("---------- save entities.  $lastId")
         restaurantRepo.saveAll(entities)
         return lastId
     }
