@@ -1,6 +1,7 @@
 package com.github.stiangao.pipixia.domain
 
 import org.springframework.data.repository.CrudRepository
+import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.stereotype.Repository
 import javax.persistence.*
 
@@ -54,7 +55,10 @@ class Restaurant {
 
     var landmarkName: String = ""
     var landmarkDistance: String = ""
+
+    @OneToOne(fetch = FetchType.LAZY)
+    var info: RestaurantInfo = RestaurantInfo()
 }
 
 @Repository
-interface RestaurantRepository : CrudRepository<Restaurant, Long>
+interface RestaurantRepository : PagingAndSortingRepository<Restaurant, Long>
