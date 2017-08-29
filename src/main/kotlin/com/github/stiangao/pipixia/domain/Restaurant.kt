@@ -41,6 +41,9 @@ class Restaurant {
     @ManyToMany(cascade = arrayOf(CascadeType.ALL), fetch = FetchType.LAZY)
     var tags: MutableList<Tag> = mutableListOf()
 
+    @ManyToMany
+    var cuisines: MutableList<Cuisine> = mutableListOf()
+
     var canBook: Boolean = false
     var haveProduct: Boolean = false
     var isPromotion: Boolean = false

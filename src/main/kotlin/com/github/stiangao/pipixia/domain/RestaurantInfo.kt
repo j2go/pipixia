@@ -28,8 +28,6 @@ class RestaurantInfo {
     var cAddress = ""
 
     @ManyToMany
-    var cuisines: MutableList<Cuisine> = mutableListOf()
-    @ManyToMany
     var labels: MutableList<Label> = mutableListOf()
 
     var bookTels = ""
