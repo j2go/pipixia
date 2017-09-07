@@ -105,12 +105,12 @@ class SpiderService(
     }
 
     private fun saveRestaurantsAndGetLastId(restaurants: JsonArray, district: District): Long {
-        var entities: MutableList<Restaurant> = mutableListOf()
+        val entities: MutableList<Restaurant> = mutableListOf()
         var lastId: Long = 0
         restaurants.forEach({
-            var jsonObj = it.asJsonObject
+            val jsonObj = it.asJsonObject
 
-            var restaurantEntity = Restaurant()
+            val restaurantEntity = Restaurant()
 
             val restaurantId = jsonObj.getAsJsonPrimitive("RestaurantId").asLong
 
@@ -148,16 +148,16 @@ class SpiderService(
                 restaurantEntity.shiMeiLinName = jsonObj.getAsJsonPrimitive("ShiMeiLinName")?.asString ?: ""
 
 
-                var tags = jsonObj.getAsJsonArray("TagNameList")
+                val tags = jsonObj.getAsJsonArray("TagNameList")
                 tags.forEach({
-                    var tag = tagRepo.findByName(it.asString)
+                    val tag = tagRepo.findByName(it.asString)
                     if (tag.isPresent) {
                         restaurantEntity.tags.add(tag.get())
                     } else {
-                        var tagEntity = Tag()
+                        val tagEntity = Tag()
                         tagEntity.name = it.asString
-                        tagEntity = tagRepo.save(tagEntity)
-                        restaurantEntity.tags.add(tagEntity)
+                        val savedTag = tagRepo.save(tagEntity)
+                        restaurantEntity.tags.add(savedTag)
                     }
                 })
                 LOGGER.info("----- add $restaurantId")
