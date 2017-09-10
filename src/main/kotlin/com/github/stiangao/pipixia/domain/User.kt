@@ -4,19 +4,12 @@ import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import javax.persistence.Entity
 import javax.persistence.Id
-import javax.persistence.OneToMany
-import javax.persistence.Version
 
 /**
  * Created by shitiangao on 2017/8/29.
  */
 @Entity
-class User {
-    @Id
-    var id: Long = -1
-
-    @Version
-    var version = 0
+class User : BaseEntity() {
 
     var uid: Long = 0
     var clientAuth = ""
@@ -26,8 +19,7 @@ class User {
     var homeUrl = ""
     var districtName = ""
 
-    @OneToMany
-    var mdealInfos: MutableList<MedalInfo> = mutableListOf()
+    var mdealInfoIds = ""
 
     var vipLevel = 0
     // ??
@@ -36,7 +28,6 @@ class User {
     var friendCount = 0
     var followCount = 0
     var commentCount = 0
-
 }
 
 @Entity

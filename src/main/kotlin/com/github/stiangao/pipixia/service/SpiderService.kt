@@ -121,7 +121,7 @@ class SpiderService(
 
             } else {
                 restaurantEntity.id = restaurantId
-                restaurantEntity.district = district
+                restaurantEntity.districtId = district.id
                 restaurantEntity.poiId = jsonObj.getAsJsonPrimitive("PoiId").asLong
                 restaurantEntity.name = jsonObj.getAsJsonPrimitive("Name").asString
                 restaurantEntity.ggCoordLat = jsonObj.getAsJsonObject("GGCoord").getAsJsonPrimitive("Lat").asDouble
@@ -152,12 +152,12 @@ class SpiderService(
                 tags.forEach({
                     val tag = tagRepo.findByName(it.asString)
                     if (tag.isPresent) {
-                        restaurantEntity.tags.add(tag.get())
+                        restaurantEntity.tagIds += "," + tag.get().id
                     } else {
                         val tagEntity = Tag()
                         tagEntity.name = it.asString
                         val savedTag = tagRepo.save(tagEntity)
-                        restaurantEntity.tags.add(savedTag)
+                        restaurantEntity.tagIds += "," + savedTag.id
                     }
                 })
                 LOGGER.info("----- add $restaurantId")

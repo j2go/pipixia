@@ -1,25 +1,19 @@
 package com.github.stiangao.pipixia.domain
 
-import org.springframework.data.repository.CrudRepository
 import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.stereotype.Repository
-import javax.persistence.*
+import javax.persistence.Entity
 
 /**
  * Created by shitiangao on 2017/8/11.
  */
 @Entity
-class Restaurant {
-    @Id
-    var id: Long = -1
+class Restaurant : BaseEntity() {
 
-    @Version
-    var version = 0
     var poiId: Long = -1
     var name: String = ""
 
-    @ManyToOne
-    var district: District = District()
+    var districtId: Long = -1
 
     var ggCoordLat: Double = 0.0
     var ggCoordLng: Double = 0.0
@@ -38,11 +32,9 @@ class Restaurant {
 
     var distanceNum: Int = 0
 
-    @ManyToMany(cascade = arrayOf(CascadeType.ALL), fetch = FetchType.LAZY)
-    var tags: MutableList<Tag> = mutableListOf()
+    var tagIds = ""
 
-    @ManyToMany
-    var cuisines: MutableList<Cuisine> = mutableListOf()
+    var cuisineIds = ""
 
     var canBook: Boolean = false
     var haveProduct: Boolean = false
@@ -59,8 +51,7 @@ class Restaurant {
     var landmarkName: String = ""
     var landmarkDistance: String = ""
 
-    @OneToOne(fetch = FetchType.LAZY)
-    var info: RestaurantInfo = RestaurantInfo()
+    var restaurantInfoId: Long = -1
 }
 
 @Repository

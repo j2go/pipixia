@@ -10,14 +10,10 @@ import javax.persistence.Version
  * Created by shitiangao on 2017/8/28.
  */
 @Entity
-class Cuisine {
-    @Id
-    var id: Long = -1
-
-    @Version
-    var version = 0
+class Cuisine : BaseEntity() {
 
     var name = ""
+    var type = ""
 }
 
 @Repository

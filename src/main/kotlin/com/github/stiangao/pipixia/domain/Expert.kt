@@ -11,13 +11,7 @@ import javax.persistence.Version
  * Created by shitiangao on 2017/8/28.
  */
 @Entity
-class Expert {
-    @Id
-    var id: Long = -1
-
-    @Version
-    var version = 0
-
+class Expert : BaseEntity() {
     var name = ""
     var intro = ""
     var identity = ""

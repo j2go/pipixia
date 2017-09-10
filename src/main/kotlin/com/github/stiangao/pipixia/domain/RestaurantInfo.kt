@@ -3,32 +3,19 @@ package com.github.stiangao.pipixia.domain
 import org.springframework.data.repository.CrudRepository
 import org.springframework.stereotype.Repository
 import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.ManyToMany
-import javax.persistence.ManyToOne
-import javax.persistence.OneToOne
-import javax.persistence.Version
 
 /**
  * Created by shitiangao on 2017/8/28.
  */
 @Entity
-class RestaurantInfo {
-    @Id
-    var id: Long = -1
-
-    @Version
-    var version = 0
-
-    @OneToOne
-    var restaurant = Restaurant()
+class RestaurantInfo : BaseEntity() {
+    var restaurant_id: Long = -1
 
     var enName = ""
     var address = ""
     var cAddress = ""
 
-    @ManyToMany
-    var labels: MutableList<Label> = mutableListOf()
+    var labels = ""
 
     var bookTels = ""
     var facilityNames = ""
@@ -44,10 +31,9 @@ class RestaurantInfo {
 
     var specialPromoteCode = 0
 
-    @ManyToOne
-    var brand: Brand? = null
-    @ManyToOne
-    var expert: Expert? = null
+    var brandId: Long = -1
+
+    var expertId: Long = -1
 
     var recommendReason = ""
 

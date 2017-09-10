@@ -5,24 +5,13 @@ import org.springframework.data.repository.PagingAndSortingRepository
 import org.springframework.stereotype.Repository
 import java.util.*
 import javax.persistence.Entity
-import javax.persistence.Id
-import javax.persistence.ManyToOne
-import javax.persistence.OneToMany
-import javax.persistence.Version
 
 /**
  * Created by shitiangao on 2017/8/29.
  */
 @Entity
-class Comment {
-    @Id
-    var id: Long = -1
-
-    @Version
-    var version = 0
-
-    @ManyToOne
-    var restaurant = Restaurant()
+class Comment : BaseEntity() {
+    var restaurantId: Long = -1
 
     var keyWords = ""
     var resourceId: Long = 0
@@ -32,8 +21,7 @@ class Comment {
     var businessId: Long = 0
     var businessType = 0
 
-    @ManyToOne
-    var User = User()
+    var userId: Long = -1
 
     var totalStar = 0
     var touristTyep = 0
@@ -62,17 +50,11 @@ class Comment {
     var auditor = ""
     var auditorTime = Date()
 
-    @OneToMany
-    var images: MutableList<CommentImage> = mutableListOf()
+    var commentImageIds = ""
 }
 
 @Entity
-class CommentImage {
-    @Id
-    var id: Long = -1
-
-    @Version
-    var version = 0
+class CommentImage : BaseEntity() {
 
     var uploadTime = Date()
     var photoPath = ""
